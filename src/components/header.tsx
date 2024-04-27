@@ -1,5 +1,5 @@
 import { FilePlus, ListVideo } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink } from "./nav-link";
 import { Separator } from "./ui/separator";
 import { Logo } from "./logo";
 
