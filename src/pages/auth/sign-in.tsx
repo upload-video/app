@@ -1,9 +1,47 @@
+import { api } from "@/api";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+
+import { useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
+
 import { twMerge } from "tailwind-merge";
+import { z } from "zod";
+
+const signInSchema = z.object({
+  email: z.string().email(),
+})
+
+type SignInSchema = z.infer<typeof signInSchema>
 
 export function SignIn() {
+  const [searchParams] = useSearchParams()
+
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting }
+  } = useForm<SignInSchema>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: searchParams.get('email') ?? ''
+    }
+  })
+
+  async function handleAuthenticate({ email }: SignInSchema) {
+    try {
+      await api.post('/authenticate', { email })
+      
+      toast.success('Enviamos um link de autenticação para o seu e-mail.')
+    } catch (error) {
+      toast.error('Credenciais inválidas!')
+    }
+  }
+
   return (
     <div className="lg:p-8 text-zinc-50">
       <a
@@ -22,12 +60,12 @@ export function SignIn() {
             Acessar plataforma
           </h1>
           <p className="text-sm text-gray-500">
-          Entre e aproveite as vantagens do <strong>upload.video</strong>
+            Entre e aproveite as vantagens do <strong>upload.video</strong>
           </p>
         </div>
 
         <div className="grid gap-6">
-          <form>
+          <form onSubmit={handleSubmit(handleAuthenticate)}>
             <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="email">Seu e-mail</Label>
@@ -37,10 +75,11 @@ export function SignIn() {
                   autoCapitalize="none"
                   autoComplete="email"
                   autoCorrect="off"
+                  {...register('email')}
                 />
               </div>
 
-              <Button type="submit">
+              <Button type="submit" disabled={isSubmitting}>
                 Entrar
               </Button>
             </div>

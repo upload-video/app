@@ -32,7 +32,7 @@ export function NewUpload() {
       return null;
     }
 
-    alert('Enviando...')
+    alert(`Enviando... ${videoFile.name}`)
 
   }
 
