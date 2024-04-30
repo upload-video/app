@@ -1,9 +1,14 @@
+import { api } from "@/api";
 import { Button } from "@/components/ui/button";
+import axios from "axios";
 import { FolderSearch, Upload } from "lucide-react";
 import { useState, ChangeEvent, useMemo, FormEvent } from "react";
+import { toast } from "sonner";
 
 export function NewUpload() {
   const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [progress, setProgress] = useState(0)
+  const [visible, setVisible] = useState(false)
 
   function onFileSelected(event: ChangeEvent<HTMLInputElement>) {
     const { files } = event.target
@@ -32,8 +37,51 @@ export function NewUpload() {
       return null;
     }
 
-    alert(`Enviando... ${videoFile.name}`)
+    setVisible(true)
 
+    await api.post('/uploads', {
+      name: videoFile.name,
+      contentType: videoFile.type,
+      size: videoFile.size,
+    }, {
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          setProgress(progress)
+        }
+      }
+    }).then(async (response) => {
+      const fileIdResponse = response.data.fileId
+      const signedUrl = response.data.signedUrl
+
+      await axios.put(signedUrl, videoFile, {
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            setProgress(progress)
+          }
+        }
+      })
+        .then(async () => {
+          toast.warning('Aguarde, estamos processando o arquivo...')
+          await api.put(`/update/${fileIdResponse}`, {}, {
+            onUploadProgress: (progressEvent) => {
+              if (progressEvent.total) {
+                const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+                setProgress(progress)
+              }
+            }
+          }).then(() => {
+            toast.success('Seu arquivo foi processado e já está disponível para download.')
+            setVisible(false)
+          })
+        })
+
+    }).catch(() => {
+      toast.error('Ocorreu um erro ao enviar o vídeo.')
+      setVisible(false)
+      setVideoFile(null)
+    })
   }
 
   return (
@@ -69,13 +117,21 @@ export function NewUpload() {
         className="invisible h-0 w-0"
       />
 
-      <Button
-        className="w-80 gap-4"
-        disabled={previewURL ? false : true}
-      >
-        Carregar vídeo
-        <Upload className="size-4" />
-      </Button>
+      {visible ? (
+        <div className="relative w-80 h-10 rounded-md bg-teal-950" style={{ width: 320 }}>
+          <Button className="absolute bg-[#062827]" style={{ width: `${progress}%` }}>
+            {progress}%
+          </Button>
+        </div>
+      ) : (
+        <Button
+          className="w-80 gap-4"
+          disabled={previewURL ? false : true}
+        >
+          Carregar vídeo
+          <Upload className="size-4" />
+        </Button>
+      )}
     </form>
   )
 }
