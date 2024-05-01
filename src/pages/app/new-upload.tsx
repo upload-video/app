@@ -1,5 +1,6 @@
 import { api } from "@/api";
 import { Button } from "@/components/ui/button";
+import { removeContentType } from "@/utils/remove-text-content-type";
 import axios from "axios";
 import { FolderSearch, Upload } from "lucide-react";
 import { useState, ChangeEvent, useMemo, FormEvent } from "react";
@@ -9,6 +10,8 @@ export function NewUpload() {
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [progress, setProgress] = useState(0)
   const [visible, setVisible] = useState(false)
+
+  let nameWithoutContentType = videoFile?.name;
 
   function onFileSelected(event: ChangeEvent<HTMLInputElement>) {
     const { files } = event.target
@@ -39,8 +42,14 @@ export function NewUpload() {
 
     setVisible(true)
 
+    if (videoFile.name.includes('.mp4')) {
+       nameWithoutContentType = removeContentType(videoFile.name)
+    }
+
+    console.log(previewURL)
+
     await api.post('/uploads', {
-      name: videoFile.name,
+      name: nameWithoutContentType,
       contentType: videoFile.type,
       size: videoFile.size,
     }, {
