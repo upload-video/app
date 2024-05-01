@@ -1,5 +1,4 @@
 import { Logo } from '@/components/logo'
-import { PlaySquare } from 'lucide-react'
 import { Outlet } from 'react-router-dom'
 
 export function AuthLayout() {

@@ -2,6 +2,7 @@ import { FilePlus, ListVideo } from "lucide-react";
 import { NavLink } from "./nav-link";
 import { Separator } from "./ui/separator";
 import { Logo } from "./logo";
+import { AccountMenu } from "./account-menu";
 
 export function Header() {
   return (
@@ -23,7 +24,7 @@ export function Header() {
         </nav>
 
         <div className="ml-auto flex items-center space-x-2">
-          Menu
+          <AccountMenu />
         </div>
       </div>
     </div>
