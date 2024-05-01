@@ -7,7 +7,7 @@ import { TableHeader } from "@/components/table/table-header";
 import { TableRow } from "@/components/table/table-row";
 import { Status } from "@/components/status-widget";
 
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ImageOff, MoreHorizontal, Search } from "lucide-react";
 
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
@@ -158,17 +158,11 @@ export function Home() {
             return (
               <TableRow key={file.id}>
                 <TableCell>
-                  <div className="flex gap-4">
-                    <img src="https://github.com/upload.video.png" 
-                    alt="Imagem de preview do vídeo"
-                    className="w-16 h-10 object-cover rounded-md aspect-video"
-                    />
-                    <div className="flex flex-col gap-1">
-                      <span className="font-semibold text-sm text-zinc-300">
-                        {file.name}
-                      </span>
-                      <span>{file.slug}</span>
-                    </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="font-semibold text-sm text-zinc-300">
+                      {file.name}
+                    </span>
+                    <span>{file.slug}</span>
                   </div>
                 </TableCell>
                 {/* <TableCell>12:37</TableCell> */}
