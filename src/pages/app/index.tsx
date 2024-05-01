@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useLayoutEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 
 import { IconButton } from "@/components/icon-button";
 import { Table } from "@/components/table";
@@ -7,13 +7,14 @@ import { TableHeader } from "@/components/table/table-header";
 import { TableRow } from "@/components/table/table-row";
 import { Status } from "@/components/status-widget";
 
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ImageOff, MoreHorizontal, Search } from "lucide-react";
+import { api } from "@/api";
+import { env } from "@/env";
+
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal, Search } from "lucide-react";
 
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { api } from "@/api";
-import { env } from "@/env";
 
 dayjs.extend(relativeTime);
 dayjs.locale("pt-br");
