@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { ChangeEvent, useEffect, useLayoutEffect, useState } from "react";
 
 import { IconButton } from "@/components/icon-button";
 import { Table } from "@/components/table";
@@ -12,6 +12,8 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal,
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { api } from "@/api";
+import { env } from "@/env";
 
 dayjs.extend(relativeTime);
 dayjs.locale("pt-br");
@@ -27,32 +29,95 @@ interface File {
 
 export function Home() {
 
-  const [files, setFiles] = useState<File[]>([
-    {
-      id: window.crypto.randomUUID(),
-      name: "Teste",
-      slug: "teste",
-      size: "1.32 MB",
-      status: "VALID",
-      createdAt: "2024-04-15T13:10:36.845Z"
-    },
-    {
-      id: window.crypto.randomUUID(),
-      name: "Teste vídeo",
-      slug: "teste-video",
-      size: "10.0 MB",
-      status: "PROCESSING",
-      createdAt: "2024-04-13T13:10:36.845Z"
-    },
-    {
-      id: window.crypto.randomUUID(),
-      name: "Teste Chrome",
-      slug: "teste-chrome",
-      size: "27.42 MB",
-      status: "EXPIRED",
-      createdAt: "2024-04-15T13:10:36.845Z"
-    },
-  ])
+  const [files, setFiles] = useState<File[]>([])
+  const [total, setTotal] = useState(0)
+
+  const totalPages = Math.ceil(total / 8)
+
+  const [search, setSearch] = useState(() => {
+    const url = new URL(window.location.toString())
+
+    if (url.searchParams.has('search')) {
+      return url.searchParams.get('search') ?? ""
+    }
+
+    return "";
+  })
+
+  const [page, setPage] = useState(() => {
+    const url = new URL(window.location.toString())
+
+    if (url.searchParams.has('page')) {
+      return Number(url.searchParams.get('page'))
+    }
+
+    return 1
+  })
+
+  useEffect(() => {
+    const url = new URL(`${env.VITE_API_URL}/files`)
+
+    url.searchParams.set('pageIndex', String(page - 1));
+
+    if (search.length > 1) {
+      url.searchParams.set('query', search)
+    }
+
+    api.get(url.toString(), {
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          console.warn(progress)
+        }
+      }
+    })
+      .then(response => {
+        setFiles(response.data.files)
+        setTotal(response.data.total)
+      })
+  }, [page, search])
+
+  function setCurrentSearch(search: string) {
+    const url = new URL(window.location.toString());
+
+    url.searchParams.set("search", search);
+
+    window.history.pushState({}, "", url);
+
+    setSearch(search);
+  }
+
+  function setCurrentPage(page: number) {
+    const url = new URL(window.location.toString());
+
+    url.searchParams.set("page", String(page));
+
+    window.history.pushState({}, "", url);
+
+    setPage(page);
+  }
+
+  function onSearchInputChanged(event: ChangeEvent<HTMLInputElement>) {
+    setCurrentSearch(event.target.value);
+    setCurrentPage(1);
+  }
+
+  function goToFirstPage() {
+    setCurrentPage(1);
+  }
+
+  function goToLastPage() {
+    setCurrentPage(totalPages);
+  }
+
+  function goToPreviousPage() {
+    setCurrentPage(page - 1);
+  }
+
+  function goToNextPage() {
+    setCurrentPage(page + 1);
+  }
+
 
   if (files.length === 0) {
     return (
@@ -61,7 +126,6 @@ export function Home() {
       </div>
     )
   }
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-3 items-center">
@@ -71,6 +135,8 @@ export function Home() {
           <input
             className="bg-transparent focus:ring-0 flex-1 outline-none border-0 p-0 text-sm"
             placeholder="Buscar uploads..."
+            value={search}
+            onChange={onSearchInputChanged}
           />
         </div>
       </div>
@@ -79,7 +145,7 @@ export function Home() {
         <thead>
           <tr className="border-b border-white/10">
             <TableHeader>Vídeo</TableHeader>
-            <TableHeader>Duração</TableHeader>
+            {/* <TableHeader>Duração</TableHeader> */}
             <TableHeader>Tamanho</TableHeader>
             <TableHeader>Status</TableHeader>
             <TableHeader>Enviado há</TableHeader>
@@ -92,14 +158,20 @@ export function Home() {
             return (
               <TableRow key={file.id}>
                 <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="font-semibold text-sm text-zinc-300">
-                      {file.name}
-                    </span>
-                    <span>{file.slug}</span>
+                  <div className="flex gap-4">
+                    <img src="https://github.com/upload.video.png" 
+                    alt="Imagem de preview do vídeo"
+                    className="w-16 h-10 object-cover rounded-md aspect-video"
+                    />
+                    <div className="flex flex-col gap-1">
+                      <span className="font-semibold text-sm text-zinc-300">
+                        {file.name}
+                      </span>
+                      <span>{file.slug}</span>
+                    </div>
                   </div>
                 </TableCell>
-                <TableCell>12:37</TableCell>
+                {/* <TableCell>12:37</TableCell> */}
                 <TableCell>{file.size}</TableCell>
                 <TableCell>
                   <Status status={file.status} />
@@ -121,25 +193,37 @@ export function Home() {
         <tfoot>
           <tr>
             <TableCell className="text-zinc-500" colSpan={3}>
-              Exibindo {files.length} de 38 itens
+              Exibindo {files.length} de {total} itens
             </TableCell>
             <TableCell className="text-right" colSpan={3}>
               <div className="inline-flex items-center gap-8">
                 <span className="text-zinc-500">
-                  Página 1 de 2
+                  Página {page} de {totalPages}
                 </span>
 
                 <div className="flex gap-1.5">
-                  <IconButton disabled>
+                  <IconButton
+                    onClick={goToFirstPage}
+                    disabled={page === 1}
+                  >
                     <ChevronsLeft className="size-4" />
                   </IconButton>
-                  <IconButton disabled>
+                  <IconButton
+                    onClick={goToPreviousPage}
+                    disabled={page === 1}
+                  >
                     <ChevronLeft className="size-4" />
                   </IconButton>
-                  <IconButton>
+                  <IconButton
+                    onClick={goToNextPage}
+                    disabled={page === totalPages}
+                  >
                     <ChevronRight className="size-4" />
                   </IconButton>
-                  <IconButton>
+                  <IconButton
+                    onClick={goToLastPage}
+                    disabled={page === totalPages}
+                  >
                     <ChevronsRight className="size-4" />
                   </IconButton>
                 </div>
