@@ -15,6 +15,7 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal,
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { SkeletonTable } from "@/components/skeleton-table";
 
 dayjs.extend(relativeTime);
 dayjs.locale("pt-br");
@@ -32,6 +33,7 @@ export function Home() {
 
   const [files, setFiles] = useState<File[]>([])
   const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
 
   const totalPages = Math.ceil(total / 8)
 
@@ -64,17 +66,11 @@ export function Home() {
       url.searchParams.set('query', search)
     }
 
-    api.get(url.toString(), {
-      onUploadProgress: (progressEvent) => {
-        if (progressEvent.total) {
-          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-          console.warn(progress)
-        }
-      }
-    })
+    api.get(url.toString())
       .then(response => {
         setFiles(response.data.files)
         setTotal(response.data.total)
+        setLoading(false)
       })
   }, [page, search])
 
@@ -119,14 +115,6 @@ export function Home() {
     setCurrentPage(page + 1);
   }
 
-
-  if (files.length === 0) {
-    return (
-      <div className="flex flex-1 flex-col gap-4 items-center justify-center text-base font-bold text-zinc-500">
-        <span>Ainda não existem arquivos para exibir.</span>
-      </div>
-    )
-  }
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-3 items-center">
@@ -142,91 +130,93 @@ export function Home() {
         </div>
       </div>
 
-      <Table>
-        <thead>
-          <tr className="border-b border-white/10">
-            <TableHeader>Vídeo</TableHeader>
-            {/* <TableHeader>Duração</TableHeader> */}
-            <TableHeader>Tamanho</TableHeader>
-            <TableHeader>Status</TableHeader>
-            <TableHeader>Enviado há</TableHeader>
-            <TableHeader style={{ width: 64 }}></TableHeader>
-          </tr>
-        </thead>
+      {loading ? (<SkeletonTable />) : (
+        <Table>
+          <thead>
+            <tr className="border-b border-white/10">
+              <TableHeader>Vídeo</TableHeader>
+              {/* <TableHeader>Duração</TableHeader> */}
+              <TableHeader>Tamanho</TableHeader>
+              <TableHeader>Status</TableHeader>
+              <TableHeader>Enviado há</TableHeader>
+              <TableHeader style={{ width: 64 }}></TableHeader>
+            </tr>
+          </thead>
 
-        <tbody>
-          {files.map((file) => {
-            return (
-              <TableRow key={file.id}>
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="font-semibold text-sm text-zinc-300">
-                      {file.name}
-                    </span>
-                    <span>{file.slug}</span>
+          <tbody>
+            {files.map((file) => {
+              return (
+                <TableRow key={file.id}>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-semibold text-sm text-zinc-300">
+                        {file.name}
+                      </span>
+                      <span>{file.slug}</span>
+                    </div>
+                  </TableCell>
+                  {/* <TableCell>12:37</TableCell> */}
+                  <TableCell>{file.size}</TableCell>
+                  <TableCell>
+                    <Status status={file.status} />
+                  </TableCell>
+                  <TableCell>{dayjs().to(file.createdAt)}</TableCell>
+                  <TableCell>
+                    <IconButton
+                      transparent
+                      className="bg-black/70 border border-white/10 rounded-md p-1.5"
+                    >
+                      <MoreHorizontal className="size-4 text-zinc-300" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </tbody>
+
+          <tfoot>
+            <tr>
+              <TableCell className="text-zinc-500" colSpan={3}>
+                Exibindo {files.length} de {total} itens
+              </TableCell>
+              <TableCell className="text-right" colSpan={3}>
+                <div className="inline-flex items-center gap-8">
+                  <span className="text-zinc-500">
+                    Página {page} de {totalPages}
+                  </span>
+
+                  <div className="flex gap-1.5">
+                    <IconButton
+                      onClick={goToFirstPage}
+                      disabled={page === 1}
+                    >
+                      <ChevronsLeft className="size-4" />
+                    </IconButton>
+                    <IconButton
+                      onClick={goToPreviousPage}
+                      disabled={page === 1}
+                    >
+                      <ChevronLeft className="size-4" />
+                    </IconButton>
+                    <IconButton
+                      onClick={goToNextPage}
+                      disabled={page === totalPages}
+                    >
+                      <ChevronRight className="size-4" />
+                    </IconButton>
+                    <IconButton
+                      onClick={goToLastPage}
+                      disabled={page === totalPages}
+                    >
+                      <ChevronsRight className="size-4" />
+                    </IconButton>
                   </div>
-                </TableCell>
-                {/* <TableCell>12:37</TableCell> */}
-                <TableCell>{file.size}</TableCell>
-                <TableCell>
-                  <Status status={file.status} />
-                </TableCell>
-                <TableCell>{dayjs().to(file.createdAt)}</TableCell>
-                <TableCell>
-                  <IconButton
-                    transparent
-                    className="bg-black/70 border border-white/10 rounded-md p-1.5"
-                  >
-                    <MoreHorizontal className="size-4 text-zinc-300" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            )
-          })}
-        </tbody>
-
-        <tfoot>
-          <tr>
-            <TableCell className="text-zinc-500" colSpan={3}>
-              Exibindo {files.length} de {total} itens
-            </TableCell>
-            <TableCell className="text-right" colSpan={3}>
-              <div className="inline-flex items-center gap-8">
-                <span className="text-zinc-500">
-                  Página {page} de {totalPages}
-                </span>
-
-                <div className="flex gap-1.5">
-                  <IconButton
-                    onClick={goToFirstPage}
-                    disabled={page === 1}
-                  >
-                    <ChevronsLeft className="size-4" />
-                  </IconButton>
-                  <IconButton
-                    onClick={goToPreviousPage}
-                    disabled={page === 1}
-                  >
-                    <ChevronLeft className="size-4" />
-                  </IconButton>
-                  <IconButton
-                    onClick={goToNextPage}
-                    disabled={page === totalPages}
-                  >
-                    <ChevronRight className="size-4" />
-                  </IconButton>
-                  <IconButton
-                    onClick={goToLastPage}
-                    disabled={page === totalPages}
-                  >
-                    <ChevronsRight className="size-4" />
-                  </IconButton>
                 </div>
-              </div>
-            </TableCell>
-          </tr>
-        </tfoot>
-      </Table>
+              </TableCell>
+            </tr>
+          </tfoot>
+        </Table>
+      )}
     </div>
   )
 }
