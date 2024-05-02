@@ -12,12 +12,12 @@ import { DialogEdit } from "@/components/dialog-edit";
 import { api } from "@/api";
 import { env } from "@/env";
 
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, Search, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, Loader2, Search, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { toast } from "sonner";
 
 dayjs.extend(relativeTime);
 dayjs.locale("pt-br");
@@ -117,6 +117,21 @@ export function Home() {
     setCurrentPage(page + 1);
   }
 
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null)
+
+  function handleDeleteFile(fileId: string) {
+    setDeletingFileId(fileId)
+    api.delete(`/file/${fileId}`)
+      .then(() => {
+        toast.success("Arquivo deletado!");
+        setFiles((prevFiles) => prevFiles.filter((file) => file.id !== fileId));
+      })
+      .catch(() => {
+        toast.error("Ocorreu um erro ao deletar.");
+      })
+      .finally(() => setDeletingFileId(null))
+  }
+
   function handleDownloadFile(fileId: string) {
     const downloadURL = new URL(`/${fileId}`, window.location.href)
     navigator.clipboard.writeText(downloadURL.toString())
@@ -138,104 +153,111 @@ export function Home() {
         </div>
       </div>
 
-      {loading ? (<SkeletonTable />) : (
-        <Table>
-          <thead>
-            <tr className="border-b border-white/10">
-              <TableHeader>Vídeo</TableHeader>
-              {/* <TableHeader>Duração</TableHeader> */}
-              <TableHeader>Tamanho</TableHeader>
-              <TableHeader>Status</TableHeader>
-              <TableHeader>Enviado há</TableHeader>
-              <TableHeader style={{ width: 64 }}>Ações</TableHeader>
-            </tr>
-          </thead>
+      {loading ? (<SkeletonTable />) :
+        files.length === 0 ?
+          <div className="flex flex-1 w-full h-full items-center justify-center">
+            <h1 className="text-zinc-500 font-bold">Não existe nenhum arquivo para exibir</h1>
+          </div> :
+          (
+            <Table>
+              <thead>
+                <tr className="border-b border-white/10">
+                  <TableHeader>Vídeo</TableHeader>
+                  {/* <TableHeader>Duração</TableHeader> */}
+                  <TableHeader>Tamanho</TableHeader>
+                  <TableHeader>Status</TableHeader>
+                  <TableHeader>Enviado há</TableHeader>
+                  <TableHeader style={{ width: 64 }}>Ações</TableHeader>
+                </tr>
+              </thead>
 
-          <tbody>
-            {files.map((file) => {
-              return (
-                <TableRow key={file.id}>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <span className="font-semibold text-sm text-zinc-300">
-                        {file.name}
+              <tbody>
+                {files.map((file) => {
+                  return (
+                    <TableRow key={file.id}>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <span className="font-semibold text-sm text-zinc-300">
+                            {file.name}
+                          </span>
+                          <span>{file.slug}</span>
+                        </div>
+                      </TableCell>
+                      {/* <TableCell>12:37</TableCell> */}
+                      <TableCell>{file.size}</TableCell>
+                      <TableCell>
+                        <Status status={file.status} />
+                      </TableCell>
+                      <TableCell>{dayjs().to(file.createdAt)}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1.5 text-zinc">
+                          <DialogEdit fileId={file.id} />
+
+                          <IconButton
+                            transparent
+                            className="bg-black/70 border border-white/10 rounded-md p-1.5"
+                            onClick={() => handleDownloadFile(file.id)}
+                          >
+                            <Download className="size-4 text-zinc-300" />
+                          </IconButton>
+
+                          <IconButton
+                            transparent
+                            className="bg-black/70 border border-white/10 rounded-md p-1.5"
+                            onClick={() => handleDeleteFile(file.id)}
+                          >
+                            {deletingFileId === file.id ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4 text-rose-500 dark:text-rose-400" />}
+                          </IconButton>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </tbody>
+
+              <tfoot>
+                <tr>
+                  <TableCell className="text-zinc-500" colSpan={3}>
+                    Exibindo {files.length} de {total} itens
+                  </TableCell>
+                  <TableCell className="text-right" colSpan={3}>
+                    <div className="inline-flex items-center gap-8">
+                      <span className="text-zinc-500">
+                        Página {page} de {totalPages}
                       </span>
-                      <span>{file.slug}</span>
+
+                      <div className="flex gap-1.5">
+                        <IconButton
+                          onClick={goToFirstPage}
+                          disabled={page === 1}
+                        >
+                          <ChevronsLeft className="size-4" />
+                        </IconButton>
+                        <IconButton
+                          onClick={goToPreviousPage}
+                          disabled={page === 1}
+                        >
+                          <ChevronLeft className="size-4" />
+                        </IconButton>
+                        <IconButton
+                          onClick={goToNextPage}
+                          disabled={page === totalPages}
+                        >
+                          <ChevronRight className="size-4" />
+                        </IconButton>
+                        <IconButton
+                          onClick={goToLastPage}
+                          disabled={page === totalPages}
+                        >
+                          <ChevronsRight className="size-4" />
+                        </IconButton>
+                      </div>
                     </div>
                   </TableCell>
-                  {/* <TableCell>12:37</TableCell> */}
-                  <TableCell>{file.size}</TableCell>
-                  <TableCell>
-                    <Status status={file.status} />
-                  </TableCell>
-                  <TableCell>{dayjs().to(file.createdAt)}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1.5 text-zinc">
-                      <DialogEdit fileId={file.id} />
-
-                      <IconButton
-                        transparent
-                        className="bg-black/70 border border-white/10 rounded-md p-1.5"
-                        onClick={() => handleDownloadFile(file.id)}
-                      >
-                        <Download className="size-4 text-zinc-300" />
-                      </IconButton>
-                      <IconButton
-                        transparent
-                        className="bg-black/70 border border-white/10 rounded-md p-1.5"
-                      >
-                        <Trash2 className="size-4 text-rose-500 dark:text-rose-400" />
-                      </IconButton>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-          </tbody>
-
-          <tfoot>
-            <tr>
-              <TableCell className="text-zinc-500" colSpan={3}>
-                Exibindo {files.length} de {total} itens
-              </TableCell>
-              <TableCell className="text-right" colSpan={3}>
-                <div className="inline-flex items-center gap-8">
-                  <span className="text-zinc-500">
-                    Página {page} de {totalPages}
-                  </span>
-
-                  <div className="flex gap-1.5">
-                    <IconButton
-                      onClick={goToFirstPage}
-                      disabled={page === 1}
-                    >
-                      <ChevronsLeft className="size-4" />
-                    </IconButton>
-                    <IconButton
-                      onClick={goToPreviousPage}
-                      disabled={page === 1}
-                    >
-                      <ChevronLeft className="size-4" />
-                    </IconButton>
-                    <IconButton
-                      onClick={goToNextPage}
-                      disabled={page === totalPages}
-                    >
-                      <ChevronRight className="size-4" />
-                    </IconButton>
-                    <IconButton
-                      onClick={goToLastPage}
-                      disabled={page === totalPages}
-                    >
-                      <ChevronsRight className="size-4" />
-                    </IconButton>
-                  </div>
-                </div>
-              </TableCell>
-            </tr>
-          </tfoot>
-        </Table>
-      )}
+                </tr>
+              </tfoot>
+            </Table>
+          )}
     </div>
   )
 }
