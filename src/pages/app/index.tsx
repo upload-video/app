@@ -6,17 +6,17 @@ import { TableCell } from "@/components/table/table-cell";
 import { TableHeader } from "@/components/table/table-header";
 import { TableRow } from "@/components/table/table-row";
 import { Status } from "@/components/status-widget";
+import { SkeletonTable } from "@/components/skeleton-table";
+import { DialogEdit } from "@/components/dialog-edit";
 
 import { api } from "@/api";
 import { env } from "@/env";
 
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MoreHorizontal, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, Search, Trash2 } from "lucide-react";
 
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { SkeletonTable } from "@/components/skeleton-table";
-import { ContextMenu } from "@/components/context-menu";
 
 dayjs.extend(relativeTime);
 dayjs.locale("pt-br");
@@ -140,7 +140,7 @@ export function Home() {
               <TableHeader>Tamanho</TableHeader>
               <TableHeader>Status</TableHeader>
               <TableHeader>Enviado há</TableHeader>
-              <TableHeader style={{ width: 64 }}></TableHeader>
+              <TableHeader style={{ width: 64 }}>Ações</TableHeader>
             </tr>
           </thead>
 
@@ -163,7 +163,21 @@ export function Home() {
                   </TableCell>
                   <TableCell>{dayjs().to(file.createdAt)}</TableCell>
                   <TableCell>
-                    <ContextMenu />
+                    <div className="flex gap-1.5 text-zinc">
+                      <DialogEdit fileId={file.id} />
+                      <IconButton
+                        transparent
+                        className="bg-black/70 border border-white/10 rounded-md p-1.5"
+                      >
+                        <Download className="size-4 text-zinc-300" />
+                      </IconButton>
+                      <IconButton
+                        transparent
+                        className="bg-black/70 border border-white/10 rounded-md p-1.5"
+                      >
+                        <Trash2 className="size-4 text-rose-500 dark:text-rose-400" />
+                      </IconButton>
+                    </div>
                   </TableCell>
                 </TableRow>
               )

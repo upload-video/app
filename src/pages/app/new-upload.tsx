@@ -73,7 +73,7 @@ export function NewUpload() {
       })
         .then(async () => {
           toast.warning('Aguarde, estamos processando o arquivo...')
-          await api.put(`/update/${fileIdResponse}`, {}, {
+          await api.put(`/status/${fileIdResponse}`, {}, {
             onUploadProgress: (progressEvent) => {
               if (progressEvent.total) {
                 const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
