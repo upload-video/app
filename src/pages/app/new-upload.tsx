@@ -64,6 +64,9 @@ export function NewUpload() {
       const signedUrl = response.data.signedUrl
 
       await axios.put(signedUrl, videoFile, {
+        headers: {
+          'Content-Type': 'video/mp4'
+        },
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
             const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)

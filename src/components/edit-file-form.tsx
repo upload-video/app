@@ -1,13 +1,15 @@
-import * as Dialog from "@radix-ui/react-dialog";
-import { Loader2, Check } from "lucide-react";
-import { Button } from "./ui/button";
 import { useEffect, useLayoutEffect, useState } from "react";
+
+import * as Dialog from "@radix-ui/react-dialog";
+import { Button } from "./ui/button";
+
+import { Loader2, Check } from "lucide-react";
+import { toast } from "sonner";
+
 import { api } from "@/api";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 
 interface EditFileFormProps {
   fileId: string

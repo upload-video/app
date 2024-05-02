@@ -17,6 +17,7 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, Searc
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { toast } from "sonner";
 
 dayjs.extend(relativeTime);
 dayjs.locale("pt-br");
@@ -116,6 +117,12 @@ export function Home() {
     setCurrentPage(page + 1);
   }
 
+  function handleDownloadFile(fileId: string) {
+    const downloadURL = new URL(`/${fileId}`, window.location.href)
+    navigator.clipboard.writeText(downloadURL.toString())
+    toast.info('URL copiada para a área de transferência.')
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-3 items-center">
@@ -165,9 +172,11 @@ export function Home() {
                   <TableCell>
                     <div className="flex gap-1.5 text-zinc">
                       <DialogEdit fileId={file.id} />
+
                       <IconButton
                         transparent
                         className="bg-black/70 border border-white/10 rounded-md p-1.5"
+                        onClick={() => handleDownloadFile(file.id)}
                       >
                         <Download className="size-4 text-zinc-300" />
                       </IconButton>

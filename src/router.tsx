@@ -8,6 +8,7 @@ import { Home } from "./pages/app";
 import { SignIn } from "./pages/auth/sign-in";
 import { SignUp } from "./pages/auth/sign-up";
 import { NewUpload } from "./pages/app/new-upload";
+import { FileView } from "./pages/app/file-view";
 
 export const router = createBrowserRouter([
   {
@@ -22,7 +23,7 @@ export const router = createBrowserRouter([
       {
         path: '/new',
         element: <NewUpload />
-      }
+      },
     ]
   },
   {
@@ -36,6 +37,16 @@ export const router = createBrowserRouter([
       {
         path: '/sign-up',
         element: <SignUp />
+      }
+    ]
+  },
+  //Public route
+  {
+    path: '/',
+    children: [
+      {
+        path: '/:id',
+        element: <FileView />
       }
     ]
   }
