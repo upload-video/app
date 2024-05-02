@@ -16,6 +16,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { SkeletonTable } from "@/components/skeleton-table";
+import { ContextMenu } from "@/components/context-menu";
 
 dayjs.extend(relativeTime);
 dayjs.locale("pt-br");
@@ -162,12 +163,7 @@ export function Home() {
                   </TableCell>
                   <TableCell>{dayjs().to(file.createdAt)}</TableCell>
                   <TableCell>
-                    <IconButton
-                      transparent
-                      className="bg-black/70 border border-white/10 rounded-md p-1.5"
-                    >
-                      <MoreHorizontal className="size-4 text-zinc-300" />
-                    </IconButton>
+                    <ContextMenu />
                   </TableCell>
                 </TableRow>
               )
